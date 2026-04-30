@@ -84,7 +84,7 @@
       },
       stage2: { title:"Этап 2: Загадка", text:"Я не число, но прибавляю к тебе меня. В математике соединяю цифры, а в жизни — сердца. Что я?", answer:"плюс", hint:"Это знак, который означает \"вместе мы больше\"." },
       stage3: { title:"Этап 3: QR-поиск", text:"Найди QR-код, спрятанный за нашей общей фотографией на кухне. Что на нём написано?", answer:"даня", hint:"Посмотри за рамкой на кухне." },
-      stage4: { title:"Этап 4: Книжный тайник", step1Q:"Книга, которую я тебе посоветовал, и ты недавно её закончила. Введи её название:", step1A:"финансист", revealText:"📖 Открой на стр. 7, строка 2, слово 4. Введи это слово:", step2A:"равно", page:7, line:2, word:4, hint:"Вспомни роман о бирже и сильных людях." },
+      stage4: { title:"Этап 4: Книжный тайник", step1Q:"Книга, которую я тебе посоветовал, и ты недавно её закончила. Введи её название:", step1A:"финансист", revealText:" Открой на стр. 7, строка 2, слово 4. Введи это слово:", step2A:"равно", page:7, line:2, word:4, hint:"Вспомни роман о бирже и сильных людях." },
       stage5: { title:"Этап 5: Наша дата", text:"Дата, которая стала отправной точкой наших отношений (ДД.ММ.ГГГГ):", answer:"31.01.2026", hint:"Вспомни тот вечер, когда мы наконец стали парой." },
       final: { 
         phrase:"ДАША ПЛЮС ДАНЯ РАВНО СЕМЬЯ", 
@@ -261,17 +261,22 @@
       });
     }
 
+    // ✅ ОБНОВЛЕННЫЕ СООБЩЕНИЯ ОБ ОШИБКАХ
     function checkSimple(){
       const v=document.getElementById('answer').value.trim();
       const cfg=CONFIG[`stage${state.currentStage}`];
       if(norm(v)===norm(cfg.answer)){
         let wordToAdd = cfg.answer.toUpperCase();
         if(state.currentStage === 5) wordToAdd = "СЕМЬЯ";
-        
         state.collected.push(wordToAdd);
         saveState();nextStage()
+      } else {
+        let msg = 'Не совсем так, попробуй ещё раз❤️';
+        if(state.currentStage === 2) msg = "Это математический символ, обозначающий суммирование❤️. Попробуй еще раз❤️";
+        if(state.currentStage === 3) msg = "Это имя твоего будущего мужа, душа моя❤️. Напиши его❤️";
+        if(state.currentStage === 5) msg = "Вспомни тот самый день, когда всё началось❤️. Попробуй ещё раз❤️";
+        alert(msg);
       }
-      else{alert('❌ Не совсем так. Попробуй ещё раз.')}
     }
 
     function checkBook(){
@@ -280,7 +285,9 @@
         document.getElementById('step1').style.display='none';
         document.getElementById('step2').style.display='block';
         alert(`📖 Страница: ${CONFIG.stage4.page}\n📏 Строка: ${CONFIG.stage4.line}\n🔍 Слово №: ${CONFIG.stage4.word}`);
-      }else{alert('❌ Не та книга. Вспомни, что я советовал.')}
+      } else {
+        alert("Это книга о Фрэнке Элджерноне Каупервуде❤️");
+      }
     }
 
     function checkWord(){
@@ -288,8 +295,9 @@
       if(norm(v)===norm(CONFIG.stage4.step2A)){
         state.collected.push("РАВНО");
         saveState();nextStage()
+      } else {
+        alert('Слово не совпадает, перечитай ещё раз❤️');
       }
-      else{alert('❌ Слово не совпадает. Пересчитай ещё раз.')}
     }
 
     function renderFinal(){
