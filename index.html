@@ -11,7 +11,8 @@
     * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
     body { background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom); background-image:radial-gradient(#f2d9e1 1px,transparent 1px); background-size:14px 14px; }
     header { width:100%; text-align:center; padding:20px 0 10px; font-size:24px; font-weight:600; }
-    .progress { display:flex; gap:8px; margin:15px 0 25px; flex-wrap:wrap; justify-content:center; }
+    .progress { display:flex; gap:8px; margin:15px 0 25px; flex-wrap:wrap; justify-content:center; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+    .progress.visible { opacity: 1; pointer-events: auto; }
     .progress-slot { background:#f0e6e9; color:#b09aa0; padding:8px 14px; border-radius:20px; font-size:13px; transition:all 0.3s; font-weight: 600; }
     .progress-slot.active { background:var(--btn); color:#fff; transform:scale(1.05); }
     main { width:100%; max-width:420px; min-height:60vh; }
@@ -20,6 +21,7 @@
     @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
     h2 { font-size:18px; text-align:center; color:#3a3032; }
     .subtitle { font-size:13px; color:var(--hint); text-align:center; }
+    .intro-text { font-size:15px; line-height:1.6; color:#5a4f51; text-align: center; margin-bottom: 10px; }
     p,.task-text { font-size:15px; line-height:1.5; color:#5a4f51; }
     .input-group { margin:10px 0; }
     label { display:block; font-size:13px; color:var(--hint); margin-bottom:6px; }
@@ -60,7 +62,7 @@
   </style>
 </head>
 <body>
-  <header>Наша история 🤍</header>
+  <header>Наша история ❤️</header>
   <div class="progress" id="progressBar"></div>
   <main id="gameContainer"></main>
   <button id="reset-btn" onclick="resetGame()">↺ Сброс</button>
@@ -92,7 +94,7 @@
       }
     };
 
-    const state = { currentStage:1, collected:[], solvedWords:[] };
+    const state = { currentStage:0, collected:[], solvedWords:[] };
     const container = document.getElementById('gameContainer');
     const progressBar = document.getElementById('progressBar');
 
@@ -101,6 +103,11 @@
     function loadState(){const s=localStorage.getItem('quest_state');if(s){Object.assign(state,JSON.parse(s));return true}return false}
 
     function renderProgress(){
+      if(state.currentStage < 1) {
+        progressBar.classList.remove('visible');
+        return;
+      }
+      progressBar.classList.add('visible');
       progressBar.innerHTML='';
       const targetWords = ["ДАША", "ПЛЮС", "ДАНЯ", "РАВНО", "СЕМЬЯ"];
       
@@ -122,11 +129,35 @@
       state.currentStage++;saveState();renderStage();renderProgress();
     }
 
+    function startGame(){
+        document.querySelector('.stage.active')?.classList.remove('active');
+        state.currentStage = 1;
+        saveState();
+        renderStage();
+        renderProgress();
+    }
+
     function toggleHint(){const h=document.querySelector('.hint-text');h.style.display=h.style.display==='block'?'none':'block'}
 
     function renderStage(){
       container.innerHTML='';
-      if(state.currentStage>5){renderFinal();return}
+      if(state.currentStage > 5){renderFinal();return}
+      
+      if(state.currentStage === 0){
+        const startScreen = document.createElement('div');
+        startScreen.className = 'stage active';
+        startScreen.innerHTML = `
+            <h2>Привет, Даша ❤️</h2>
+            <p class="intro-text">Душа моя. Я сделал эту небольшую игру, для того, чтобы ты немного передохнула от дел и, надеюсь, интересно и весело провела время.</p>
+            <p class="intro-text">В игре будет пять заданий, которые тебе нужно будет выполнить, чтобы узнать, какой сюрприз я тебе приготовил.</p>
+            <p class="intro-text">Если что-то будет непонятно, то я всегда рядом и дам любые подсказки.</p>
+            <p class="intro-text" style="font-weight:600; margin-top:15px;">Начинаем?</p>
+            <button class="btn" onclick="startGame()">В путь ❤️</button>
+        `;
+        container.appendChild(startScreen);
+        return;
+      }
+
       const cfg=CONFIG[`stage${state.currentStage}`];
       const stage=document.createElement('div');
       stage.className='stage active';
@@ -203,7 +234,7 @@
             state.solvedWords.push(idx);
             
             if(state.solvedWords.length === 4) {
-              state.collected.push("ДАША"); // ✅ ИСПРАВЛЕНО: Добавляем первое слово
+              state.collected.push("ДАША");
               saveState();
               document.getElementById('wordReveal').classList.add('vis');
               document.getElementById('nextBtn').classList.add('show');
@@ -248,8 +279,8 @@
       if(norm(v).includes(norm(CONFIG.stage4.step1A))){
         document.getElementById('step1').style.display='none';
         document.getElementById('step2').style.display='block';
-        alert(` Страница: ${CONFIG.stage4.page}\n📏 Строка: ${CONFIG.stage4.line}\n🔍 Слово №: ${CONFIG.stage4.word}`);
-      }else{alert(' Не та книга. Вспомни, что я советовал.')}
+        alert(`📖 Страница: ${CONFIG.stage4.page}\n📏 Строка: ${CONFIG.stage4.line}\n🔍 Слово №: ${CONFIG.stage4.word}`);
+      }else{alert('❌ Не та книга. Вспомни, что я советовал.')}
     }
 
     function checkWord(){
@@ -270,7 +301,7 @@
         <img src="photo.jpg" alt="Мы" class="final-photo" onerror="this.style.display='none'">
         <div class="final-text">${CONFIG.final.message.replace(/\n/g,'<br>')}</div>
         <div class="final-text" style="font-weight:600">${CONFIG.final.address}</div>
-        <div class="timer-box" id="timer">⏳ Загрузка...</div>`;
+        <div class="timer-box" id="timer"> Загрузка...</div>`;
       container.appendChild(f);startTimer();
     }
 
@@ -285,10 +316,19 @@
       };up();setInterval(up,1000);
     }
 
-    function resetGame(){if(confirm('Сбросить прогресс?')){localStorage.removeItem('quest_state');location.reload()}}
+    function resetGame(){
+        if(confirm('Сбросить прогресс?')){
+            localStorage.removeItem('quest_state');
+            location.reload();
+        }
+    }
 
-    loadState();renderProgress();
-    if(state.currentStage<=5)renderStage();else renderFinal();
+    loadState();
+    if(state.currentStage === 0 && state.collected.length > 0) {
+        state.currentStage = 1; 
+    }
+    renderProgress();
+    renderStage();
   </script>
 </body>
 </html>
